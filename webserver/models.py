@@ -1,10 +1,10 @@
 from app import db
 from flask_login import UserMixin
 
-class Users(UserMixin, db.Model):
-    __tablename__ = "users"
+class User(UserMixin, db.Model):
+    __tablename__ = "user"
     
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer(), primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     pwd = db.Column(db.String(300), nullable=False, unique=True)
@@ -12,10 +12,10 @@ class Users(UserMixin, db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
-class User(UserMixin, db.Model):
-    __tablename__ = "user"
+class Users(UserMixin, db.Model):
+    __tablename__ = "users"
     
-    id  = db.Column(db.Integer, primary_key=True)
+    id  = db.Column(db.Integer(), primary_key=True)
     name     = db.Column(db.String(80), unique=True, nullable=False)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email    = db.Column(db.String(120), unique=True, nullable=False)
@@ -28,7 +28,7 @@ class User(UserMixin, db.Model):
 class Settings(UserMixin, db.Model):
     __tablename__ = "settings"
 
-    Key     = db.Column(db.Integer, primary_key=True)
+    Key     = db.Column(db.Integer(), primary_key=True)
     Value   = db.Column(db.String(80), unique=True, nullable=False)
 
     def __repr__(self):
@@ -37,7 +37,7 @@ class Settings(UserMixin, db.Model):
 class Programs(UserMixin, db.Model):
     __tablename__ = "programs"
 
-    Prog_ID     = db.Column(db.Integer, primary_key=True)
+    Prog_ID     = db.Column(db.Integer(), primary_key=True)
     Name        = db.Column(db.String(80), unique=True, nullable=False)
     Description = db.Column(db.String(80), unique=True, nullable=True)
     File        = db.Column(db.String(80), unique=True, nullable=False)
@@ -49,7 +49,7 @@ class Programs(UserMixin, db.Model):
 class Slave_dev(UserMixin, db.Model):
     __tablename__ = "slave_dev"
 
-    dev_id      = db.Column(db.Integer, primary_key=True)
+    dev_id      = db.Column(db.Integer(), primary_key=True)
     dev_name    = db.Column(db.String(80), unique=True, nullable=False)
     dev_type    = db.Column(db.String(80), unique=True, nullable=False)
     slave_id    = db.Column(db.Integer(), unique=False, nullable=False)
@@ -65,10 +65,10 @@ class Slave_dev(UserMixin, db.Model):
     coil_start  = db.Column(db.Integer(), unique=False, nullable=True)
     coil_size   = db.Column(db.Integer(), unique=False, nullable=True)      
     ir_start    = db.Column(db.Integer(), unique=False, nullable=True)
-    ir_size  = db.Column(db.Integer(), unique=False, nullable=True)
-    hr_read_start   = db.Column(db.Integer(), unique=False, nullable=True)
-    hr_read_size  = db.Column(db.Integer(), unique=False, nullable=True)
-    hr_write_start    = db.Column(db.Integer(), unique=False, nullable=True)
+    ir_size     = db.Column(db.Integer(), unique=False, nullable=True)
+    hr_read_start = db.Column(db.Integer(), unique=False, nullable=True)
+    hr_read_size   = db.Column(db.Integer(), unique=False, nullable=True)
+    hr_write_start = db.Column(db.Integer(), unique=False, nullable=True)
     hr_write_size  = db.Column(db.Integer(), unique=False, nullable=True)
     pause  = db.Column(db.Integer(), unique=False, nullable=True)
 

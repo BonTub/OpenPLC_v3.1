@@ -14,13 +14,18 @@ CMakeSettings.json
 # Build directories
 webserver/bin
 webserver/build
-obj/
-
-
-/__pycache__
-*.db
-database.db
-migrations/
-migrations/versions
-migrations/versions/__pycache__
+webserver/.venv
+webserver/.venv/
+webserver/venv/
 venv/
+obj/
+.venv/
+
+
+webserver/__pycache__
+webserver/migrations/
+webserver/migrations/versions
+webserver/migrations/versions/__pycache__
+# databases
+*.db
+webserver/*.db

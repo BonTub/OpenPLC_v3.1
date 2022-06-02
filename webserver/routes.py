@@ -43,11 +43,11 @@ app = create_app()
 @app.before_request
 def session_handler():
     session.permanent = True
-    app.permanent_session_lifetime = timedelta(minutes=1)
+    app.permanent_session_lifetime = timedelta(minutes=10)
 
 @app.route("/", methods=("GET", "POST"), strict_slashes=False)
 def index():
-    return render_template("index.html",title="Home")
+    return render_template("index.html",title="OpenPLC_V3.1 Monitor")
 
 
 @app.route("/login/", methods=("GET", "POST"), strict_slashes=False)

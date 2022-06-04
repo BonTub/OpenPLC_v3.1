@@ -13,4 +13,4 @@ python manage.py
 chmod 777 run
 # start flask webserver app
 ./run
-
+# or code .start met python flask debig launch configuration on venv python interpreter

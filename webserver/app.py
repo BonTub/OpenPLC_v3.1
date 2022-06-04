@@ -11,6 +11,8 @@ from flask_login import (
     logout_user,
     login_required,
 )
+import os
+from os import urandom
 
 login_manager = LoginManager()
 login_manager.session_protection = "strong"
@@ -25,7 +27,8 @@ bcrypt = Bcrypt()
 def create_app():
     app = Flask(__name__)
 
-    app.secret_key = 'secret-key'
+    #app.secret_key = 'secret-key'
+    app.secret_key = str(os.urandom(16)) # disables usercoookies and headers from other/previous app instances
     app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///database.db"
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 

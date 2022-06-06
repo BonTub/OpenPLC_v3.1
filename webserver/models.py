@@ -12,6 +12,16 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
+
+# an example mapping using the base
+class Myuser(db.Model):
+    __tablename__ = "myuser"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
+    fullname = db.Column(db.String)
+    nickname = db.Column(db.String)
+
 class Users(UserMixin, db.Model):
     __tablename__ = "users"
     

@@ -8,9 +8,9 @@ python -m pip install --upgrade pymodbus
 pip install -r requirements.txt 
 git commit -a
 pip freeze>feeeze.now
-# deply database
+# deploy database
 python manage.py
 chmod 777 run
 # start flask webserver app
 ./run
-# or code .start met python flask debig launch configuration on venv python interpreter
+# or use a VScode with  #code . # using python flask debug launch configuration on python interpreter in the venv :)

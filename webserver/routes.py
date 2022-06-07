@@ -30,62 +30,23 @@ from flask_login import (
 )
 
 from app import create_app,db,login_manager,bcrypt
+#import models
 from models import User,Settings
 from forms import login_form,register_form
 
 app = create_app()
-app.app_context().push()
+#app.app_context().push()
 
 
-def init_app(app):
-    with app.app_context():
-        try:
-            user = User(username='openplc1', email='openplc1@example.com',pwd='openplc1')
-            db.session.add(user)
-            db.session.commit()
-        except: 
-            print("user already added");
-        
+#init_app(app) see manage.py
 
-''' 
- #myuser = User.query.filter_by(["id=1]).first()
-        #filters = (
-        #    username == 'openplc',
-        #)
-        return
-        adminuser= db.session.execute(User.query.filter(*filters))
-            
-        newuser = User(
-           username="openplc",
-           email="openplc@wibosa.nl",
-           pwd=bcrypt.generate_password_hash("openplc"),
-        )
-        user = db.User("openplc")
-        some_user = session.scalars(select(Myuser).where(Myuser.fullname == "John Smith").limit(1)).first()
-        if not ( adminuser.username == newuser.username ):
-            print("adminuser created")    
-    
-            db.session.merge(newuser) #upsert addition
-            db.session.commit()
-        else:
-            print("user already added")
-
- '''
-
-
-init_app(app)
-
+#configure_openplc(app)
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-
-
-
-
-#configure_openplc(app)
 
 @app.before_request
 def session_handler():

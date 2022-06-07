@@ -3,7 +3,7 @@ from flask_login import UserMixin
 
 class User(UserMixin, db.Model):
     __tablename__ = "user"
-    
+
     id = db.Column(db.Integer(), primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -17,14 +17,14 @@ class User(UserMixin, db.Model):
 class Myuser(db.Model):
     __tablename__ = "myuser"
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    fullname = db.Column(db.String)
-    nickname = db.Column(db.String)
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String())
+    fullname = db.Column(db.String())
+    nickname = db.Column(db.String())
 
 class Users(UserMixin, db.Model):
     __tablename__ = "users"
-    
+
     id  = db.Column(db.Integer(), primary_key=True)
     name     = db.Column(db.String(80), unique=True, nullable=False)
     username = db.Column(db.String(80), unique=True, nullable=False)

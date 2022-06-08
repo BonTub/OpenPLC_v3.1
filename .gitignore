@@ -29,3 +29,4 @@ webserver/migrations/versions/__pycache__
 # databases
 *.db
 webserver/*.db
+webserver/ormsnippets.py

@@ -1,9 +1,11 @@
+# from curses import keyname
 import os
-from os.path import exists
+# from os.path import exists
 from app import create_app, db, bcrypt
 from flask_migrate import upgrade, migrate, init, stamp
 from models import User
-from sqlalchemy import exists 
+from models import Setting
+# from sqlalchemy import exists 
 app = create_app()
 app.app_context().push()
 db.create_all()
@@ -15,21 +17,29 @@ stamp()
 migrate()
 upgrade()
 # add a adminuser
-adminuser = User(\
-  username='openplc1',\
-  email='openplc1@example.com',\
-  pwd=bcrypt.generate_password_hash('openplc1')\
+adminuser = User(
+  username='openplc1',
+  email='openplc1@example.com',
+  pwd=bcrypt.generate_password_hash('openplc1')
   )
+
+# add Settings list
+
+setting1 = Setting( key = 'Modbus_port',    value='502')
+setting2 = Setting( key = 'Dnp3_port',      value='20000')
+setting3 = Setting( key = 'Start_run_mode', value='false')
+setting4 = Setting( key = 'Slave_polling',  value='100')
+setting5 = Setting( key = 'Slave_timeout',  value='1000')
+setting6 = Setting( key = 'Enip_port',      value='44818')
+setting7 = Setting( key = 'Pstorage_polling', value='disabled')
+
 try:
-    #upserting adminuser
-    #existing = db.session.query(User).filter_by(value=adminuser['username']).one()
     db.session.merge(adminuser)
+    db.session.add_all([setting1, setting2, setting3 , setting4, setting5 , setting6 , setting6 , setting7 ])
     db.session.commit()
-        
-    #return existing
+
 except Exception as e:
     print(e)
     db.session.rollback() # user exist if a integrity error
     #obj = User()
 
-#end adminuser

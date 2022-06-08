@@ -1,18 +1,18 @@
 from flask import Flask
+from flask import session
+from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_migrate import Migrate
-
-from flask_login import (
+from flask_login import(
     UserMixin,
     login_user,
     LoginManager,
     current_user,
     logout_user,
     login_required,
-)
-#import os
-#from os import urandom
+    )
+
 
 login_manager = LoginManager()
 login_manager.session_protection = "strong"
@@ -23,19 +23,18 @@ db = SQLAlchemy()
 migrate = Migrate()
 bcrypt = Bcrypt()
 
-
 def create_app():
     app = Flask(__name__)
-
     app.secret_key = 'secret-key'
-    #app.secret_key = str(os.urandom(16)) # disables the cookied headers from other/previous app instances
+    # import os
+    # from os import urandom
+    # app.secret_key = str(os.urandom(16)) # disables the cookied headers from other/previous app instances
     app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///database.db"
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-
     login_manager.init_app(app)
     db.init_app(app)
     migrate.init_app(app, db)
-  
+
     return app
 
 
@@ -44,12 +43,12 @@ def configure_openplc(app):
     global openplc_runtime
     with app.app_context():
         pass
-           
-    
 
-     #   for setting in db.session.query("settings").all():
-     #       print( setting )
-     # ...
+
+
+    #   for setting in db.session.query("settings").all():
+    #       print( setting )
+    # ...
 ''' 
     Settings.query().
     database = "openplc.db"
@@ -185,4 +184,3 @@ def generate_mbconfig():
     else:
         print("Error opening DB")
                  '''
-

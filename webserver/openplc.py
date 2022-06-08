@@ -1,10 +1,14 @@
-#Use this for OpenPLC console: http://eyalarubas.com/python-subproc-nonblock.html
+# Use this for OpenPLC console: http://eyalarubas.com/python-subproc-nonblock.html
 import subprocess
 import socket
 import errno
 import time
 from threading import Thread
-from Queue import Queue, Empty
+
+from app import db
+from models import Setting
+import os
+from os import path, remove
 
 intervals = (
     ('weeks', 604800),  # 60 * 60 * 24 * 7
@@ -14,17 +18,18 @@ intervals = (
     ('seconds', 1),
     )
 
+
 def display_time(seconds, granularity=2):
     result = []
-
     for name, count in intervals:
         value = seconds // count
         if value:
             seconds -= value * count
             if value == 1:
                 name = name.rstrip('s')
-            result.append("{} {}".format(value, name))
+            result.append(f"{0} {1}".format(value, name))
     return ', '.join(result[:granularity])
+
 
 class NonBlockingStreamReader:
 
@@ -37,33 +42,33 @@ class NonBlockingStreamReader:
         '''
 
         self._s = stream
-        self._q = Queue()
+        self._q = queue()
 
-        def _populateQueue(stream, queue):
-            '''
+        '''
             Collect lines from 'stream' and put them in 'queue'.
-            '''
+        '''
+        def _populateQueue(stream, queue):
 
             #while True:
-            while (self.end_of_stream == False):
-                line = stream.readline()
-                if line:
-                    queue.put(line)
-                    if (line.find("Compilation finished with errors!") >= 0 or line.find("Compilation finished successfully!") >= 0):
+            while not self.end_of_stream:
+                rline = stream.readline()
+                if rline:
+                    queue.put( rline )
+                    if (rline.find("Compilation finished with errors!") >= 0 or rline.find("Compilation finished successfully!") >= 0 ):
                         self.end_of_stream = True
                 else:
                     self.end_of_stream = True
                     raise UnexpectedEndOfStream
 
         self._t = Thread(target = _populateQueue, args = (self._s, self._q))
-        self._t.daemon = True
-        self._t.start() #start collecting lines from the stream
+        self._t.daemon = Literal[True]
+        self._t.start()  # start collecting lines from the stream
 
     def readline(self, timeout = None):
         try:
             return self._q.get(block = timeout is not None,
                     timeout = timeout)
-        except Empty:
+        except queue.Empty:
             return None
 
 class UnexpectedEndOfStream(Exception): pass
@@ -254,3 +259,148 @@ class runtime:
             return "Error connecting to OpenPLC runtime"
         else:
             return "N/A"
+
+
+def configure_runtime(app):
+    global openplc_runtime
+    app.app_context().push()
+    with app.app_context():
+        session = db.session.session_factory()
+        try:
+            # a list
+            result = session.query(Setting).all()
+
+        except:
+            print("db session settings trouble")
+
+
+        # use the settings    
+        for setting in result:
+            # print(setting.key, setting.value)
+            if setting.key == "Modbus_port":
+                if setting.value != "disabled":
+                    print("Enabling Modbus on port " + str(int(setting.value)))
+                    openplc_runtime.start_modbus(int(setting.value))
+                else:
+                    print("Disabling Modbus")
+                    openplc_runtime.stop_modbus()
+            elif setting.key == "Dnp3_port":
+                if setting.value != "disabled":
+                    print("Enabling DNP3 on port " + str(int(setting.value)))
+                    openplc_runtime.start_dnp3(int(setting.value))
+                else:
+                    print("Disabling DNP3")
+                    openplc_runtime.stop_dnp3()
+            elif setting.key == "Enip_port":
+                if setting.value != "disabled":
+                    print("Enabling Enip on port " + str(int(setting.value)))
+                    openplc_runtime.start_enip(int(setting.value))
+                else:
+                    print("Disabling Enip")
+                    openplc_runtime.stop_enip()
+            elif setting.key == "Pstorage_polling":
+                if setting.value != "disabled":
+                    print("Enabling Persistent Storage with polling rate of " + str(int(setting.value)) + " seconds")
+                    openplc_runtime.start_pstorage(int(setting.value))
+                else:
+                    print("Disabling Persistent Storage")
+                    openplc_runtime.stop_pstorage()
+                    delete_persistent_file()
+            else:
+                print( setting )
+            print( "Default Settings applied" )
+    return
+
+
+def delete_persistent_file():
+    if (os.path.isfile("persistent.file")):
+        os.remove("persistent.file")
+    print("persistent.file removed!")
+
+
+
+'''
+
+
+
+
+def generate_mbconfig():
+    database = "openplc.db"
+    conn = create_connection(database)
+    if (conn != None):
+        try:
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*) FROM Slave_dev")
+            row = cur.fetchone()
+            num_devices = int(row[0])
+            mbconfig = 'Num_Devices = "' + str(num_devices) + '"'
+            cur.close()
+            
+            cur=conn.cursor()
+            cur.execute("SELECT * FROM Settings")
+            rows = cur.fetchall()
+            cur.close()
+                    
+            for row in rows:
+                if (row[0] == "Slave_polling"):
+                    slave_polling = str(row[1])
+                elif (row[0] == "Slave_timeout"):
+                    slave_timeout = str(row[1])
+                    
+            mbconfig += '\nPolling_Period = "' + slave_polling + '"'
+            mbconfig += '\nTimeout = "' + slave_timeout + '"'
+            
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM Slave_dev")
+            rows = cur.fetchall()
+            cur.close()
+            conn.close()
+            
+            device_counter = 0
+            for row in rows:
+                mbconfig += """
+# ------------
+#   DEVICE """
+                mbconfig += str(device_counter)
+                mbconfig += """
+# ------------
+"""
+                mbconfig += 'device' + str(device_counter) + '.name = "' + str(row[1]) + '"\n'
+                mbconfig += 'device' + str(device_counter) + '.slave_id = "' + str(row[3]) + '"\n'
+                if (str(row[2]) == 'ESP32' or str(row[2]) == 'ESP8266' or str(row[2]) == 'TCP'):
+                    mbconfig += 'device' + str(device_counter) + '.protocol = "TCP"\n'
+                    mbconfig += 'device' + str(device_counter) + '.address = "' + str(row[9]) + '"\n'
+                else:
+                    mbconfig += 'device' + str(device_counter) + '.protocol = "RTU"\n'
+                    if (str(row[4]).startswith("COM")):
+                        port_name = "/dev/ttyS" + str(int(str(row[4]).split("COM")[1]) - 1)
+                    else:
+                        port_name = str(row[4])
+                    mbconfig += 'device' + str(device_counter) + '.address = "' + port_name + '"\n'
+                mbconfig += 'device' + str(device_counter) + '.IP_Port = "' + str(row[10]) + '"\n'
+                mbconfig += 'device' + str(device_counter) + '.RTU_Baud_Rate = "' + str(row[5]) + '"\n'
+                mbconfig += 'device' + str(device_counter) + '.RTU_Parity = "' + str(row[6]) + '"\n'
+                mbconfig += 'device' + str(device_counter) + '.RTU_Data_Bits = "' + str(row[7]) + '"\n'
+                mbconfig += 'device' + str(device_counter) + '.RTU_Stop_Bits = "' + str(row[8]) + '"\n'
+                mbconfig += 'device' + str(device_counter) + '.RTU_TX_Pause = "' + str(row[21]) + '"\n\n'
+                
+                mbconfig += 'device' + str(device_counter) + '.Discrete_Inputs_Start = "' + str(row[11]) + '"\n'
+                mbconfig += 'device' + str(device_counter) + '.Discrete_Inputs_Size = "' + str(row[12]) + '"\n'
+                mbconfig += 'device' + str(device_counter) + '.Coils_Start = "' + str(row[13]) + '"\n'
+                mbconfig += 'device' + str(device_counter) + '.Coils_Size = "' + str(row[14]) + '"\n'
+                mbconfig += 'device' + str(device_counter) + '.Input_Registers_Start = "' + str(row[15]) + '"\n'
+                mbconfig += 'device' + str(device_counter) + '.Input_Registers_Size = "' + str(row[16]) + '"\n'
+                mbconfig += 'device' + str(device_counter) + '.Holding_Registers_Read_Start = "' + str(row[17]) + '"\n'
+                mbconfig += 'device' + str(device_counter) + '.Holding_Registers_Read_Size = "' + str(row[18]) + '"\n'
+                mbconfig += 'device' + str(device_counter) + '.Holding_Registers_Start = "' + str(row[19]) + '"\n'
+                mbconfig += 'device' + str(device_counter) + '.Holding_Registers_Size = "' + str(row[20]) + '"\n'
+                device_counter += 1
+                
+            with open('./mbconfig.cfg', 'w+') as f: f.write(mbconfig)
+            
+        except Error as e:
+            print("error connecting to the database" + str(e))
+    else:
+        print("Error opening DB")
+ '''
+openplc_runtime = runtime()

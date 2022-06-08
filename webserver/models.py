@@ -1,6 +1,7 @@
 from app import db
 from flask_login import UserMixin
 
+
 class User(UserMixin, db.Model):
     __tablename__ = "user"
 
@@ -12,15 +13,6 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
-
-# an example mapping using the base
-class Myuser(db.Model):
-    __tablename__ = "myuser"
-
-    id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String())
-    fullname = db.Column(db.String())
-    nickname = db.Column(db.String())
 
 class Users(UserMixin, db.Model):
     __tablename__ = "users"
@@ -35,26 +27,30 @@ class Users(UserMixin, db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
-class Settings(UserMixin, db.Model):
-    __tablename__ = "settings"
 
-    Key     = db.Column(db.Integer(), primary_key=True)
-    Value   = db.Column(db.String(80), unique=True, nullable=False)
-
-    def __repr__(self):
-        return '<Setting() %r>' % self.Value
-
-class Programs(UserMixin, db.Model):
-    __tablename__ = "programs"
-
-    Prog_ID     = db.Column(db.Integer(), primary_key=True)
-    Name        = db.Column(db.String(80), unique=True, nullable=False)
-    Description = db.Column(db.String(80), unique=True, nullable=True)
-    File        = db.Column(db.String(80), unique=True, nullable=False)
-    Date_upload = db.Column(db.Integer(), unique=False, nullable=False)
+class Setting(UserMixin, db.Model):
+    __tablename__ = "setting"
+    id      = db.Column(db.Integer(), primary_key=True)
+    key     = db.Column(db.String(80), unique=True, nullable=False)
+    value   = db.Column(db.String(80), nullable=True)
 
     def __repr__(self):
-        return '<Programs() %r>' % self.Name
+#        return '<Setting %r >' %  self.key 
+        return '<Setting %r > %-20s : %10s' %  (self.id, self.key , self.value) 
+#        return f'<Setting> ("{self.id}","{self.key}",{self.value})'
+
+
+class Program(UserMixin, db.Model):
+    __tablename__ = "program"
+
+    id          = db.Column(db.Integer(), primary_key=True)
+    name        = db.Column(db.String(80), unique=True, nullable=False)
+    description = db.Column(db.String(80), unique=True, nullable=True)
+    file        = db.Column(db.String(80), unique=True, nullable=False)
+    date_upload = db.Column(db.Integer(), unique=False, nullable=False)
+
+    def __repr__(self):
+        return '<Program() %r>' % self.Name
 
 class Slave_dev(UserMixin, db.Model):
     __tablename__ = "slave_dev"

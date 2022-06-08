@@ -1,11 +1,3 @@
-from flask import (
-    Flask,
-    render_template,
-    redirect,
-    flash,
-    url_for,
-    session
-)
 
 from datetime import timedelta
 from sqlalchemy.exc import (
@@ -15,10 +7,11 @@ from sqlalchemy.exc import (
     InterfaceError,
     InvalidRequestError,
 )
+from flask import (Flask, render_template, redirect, flash, url_for, session)
+
 from werkzeug.routing import BuildError
 
-
-from flask_bcrypt import Bcrypt,generate_password_hash, check_password_hash
+from flask_bcrypt import Bcrypt, generate_password_hash, check_password_hash
 
 from flask_login import (
     UserMixin,
@@ -29,23 +22,29 @@ from flask_login import (
     login_required,
 )
 
-from app import create_app,db,login_manager,bcrypt
-#import models
-from models import User,Settings
-from forms import login_form,register_form
+from app import create_app, db, login_manager, bcrypt
+# import models
+from models import User
+from forms import login_form, register_form
+
+from openplc import openplc_runtime, configure_runtime
+
 
 app = create_app()
-#app.app_context().push()
+# init_app(app) see manage.py
+app.app_context().push()
 
 
-#init_app(app) see manage.py
+# configure_openplc(app)
+# openplc_runtime = openplc.runtime()
+configure_runtime(app)
 
-#configure_openplc(app)
+
+
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-
 
 
 @app.before_request
@@ -53,9 +52,10 @@ def session_handler():
     session.permanent = True
     app.permanent_session_lifetime = timedelta(minutes=10)
 
+
 @app.route("/", methods=("GET", "POST"), strict_slashes=False)
 def index():
-    return render_template("index.html",title="OpenPLC_V3.1 Monitor")
+    return render_template("index.html", title="OpenPLC_V3.1 Monitor")
 
 
 @app.route("/login/", methods=("GET", "POST"), strict_slashes=False)
@@ -74,12 +74,11 @@ def login():
             flash(e, "danger")
 
     return render_template("auth.html",
-        form=form,
-        text="Login",
-        title="Login",
-        btn_action="Login"
-        )
-
+                           form=form,
+                           text="Login",
+                           title="Login",
+                           btn_action="Login"
+                           )
 
 
 # Register route
@@ -91,42 +90,43 @@ def register():
             email = form.email.data
             pwd = form.pwd.data
             username = form.username.data
-            
+
             newuser = User(
                 username=username,
                 email=email,
                 pwd=bcrypt.generate_password_hash(pwd),
             )
-    
+
             db.session.add(newuser)
             db.session.commit()
-            flash(f"Account Succesfully created", "success")
+            flash("Account Succesfully created ", "success")
             return redirect(url_for("login"))
 
         except InvalidRequestError:
             db.session.rollback()
-            flash(f"Something went wrong!", "danger")
+            flash("Something went wrong! ", "danger")
         except IntegrityError:
             db.session.rollback()
-            flash(f"User already exists!.", "warning")
+            flash("User already exists! ", "warning")
         except DataError:
             db.session.rollback()
-            flash(f"Invalid Entry", "warning")
+            flash("Invalid Entry", "warning")
         except InterfaceError:
             db.session.rollback()
-            flash(f"Error connecting to the database", "danger")
+            flash("Error connecting to the database", "danger")
         except DatabaseError:
             db.session.rollback()
-            flash(f"Error connecting to the database", "danger")
+            flash("Error connecting to the database", "danger")
         except BuildError:
             db.session.rollback()
-            flash(f"An error occured !", "danger")
+            flash("An error occured !", "danger")
     return render_template("auth.html",
-        form=form,
-        text="Create account",
-        title="Register",
-        btn_action="Register account"
-        )
+                           form=form,
+                           text="Create account",
+                           title="Register",
+                           btn_action="Register account",
+                           )
+
 
 @app.route("/logout")
 @login_required

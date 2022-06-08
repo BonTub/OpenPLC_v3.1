@@ -13,6 +13,7 @@ import email_validator
 from flask_login import current_user
 from wtforms import ValidationError,validators
 from models import User
+#from models import Setting
 
 
 class login_form(FlaskForm):
@@ -47,6 +48,15 @@ class register_form(FlaskForm):
     )
 
 
+class setting_form(FlaskForm):
+    key = StringField(validators=[InputRequired(), Length(1, 64)])
+    value = StringField(validators=[InputRequired(),  Length(1, 64)])
+# Placeholder labels to enable form rendering
+    value = StringField(
+        validators=[Optional()]
+    )
+
+
     def validate_email(self, email):
         if User.query.filter_by(email=email.data).first():
             raise ValidationError("Email already registered!")
@@ -54,3 +64,4 @@ class register_form(FlaskForm):
     def validate_uname(self, uname):
         if User.query.filter_by(username=username.data).first():
             raise ValidationError("Username already taken!")
+

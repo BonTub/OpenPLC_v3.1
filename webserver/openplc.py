@@ -336,7 +336,7 @@ def generate_mbconfig(app):
             for row in result:
                 mbconfig += mb_config(row,device_counter)
                 device_counter += 1
-            print(mbconfig)
+            # print(mbconfig)
             
         except:
             print("db session modbusconfig trouble")

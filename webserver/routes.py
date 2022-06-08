@@ -32,14 +32,12 @@ from openplc import openplc_runtime, configure_runtime
 
 app = create_app()
 # init_app(app) see manage.py
-app.app_context().push()
+# app.app_context().push()
 
 
 # configure_openplc(app)
 # openplc_runtime = openplc.runtime()
 configure_runtime(app)
-
-
 
 
 @login_manager.user_loader

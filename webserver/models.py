@@ -4,28 +4,29 @@ from flask_login import UserMixin
 
 class User(UserMixin, db.Model):
     __tablename__ = "user"
+    id       = db.Column(db.Integer(), primary_key=True)    
+    name     = db.Column(db.String(80), unique=True, nullable=False)
+    username = db.Column(db.String(80), unique=False, nullable=False)
+    email    = db.Column(db.String(120), unique=False, nullable=False)
+    pwd      = db.Column(db.String(300), nullable=False, unique=False)
+    pict_file= db.Column(db.String(300), nullable=False, unique=False)
 
-    id = db.Column(db.Integer(), primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    pwd = db.Column(db.String(300), nullable=False, unique=True)
 
     def __repr__(self):
         return '<User %r>' % self.username
-
 
 class Users(UserMixin, db.Model):
     __tablename__ = "users"
 
-    id  = db.Column(db.Integer(), primary_key=True)
+    id       = db.Column(db.Integer(), primary_key=True)
     name     = db.Column(db.String(80), unique=True, nullable=False)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email    = db.Column(db.String(120), unique=True, nullable=False)
-    pwd = db.Column(db.String(300), nullable=False, unique=False)
+    pwd      = db.Column(db.String(300), nullable=False, unique=False)
     pict_file= db.Column(db.String(300), nullable=False, unique=False)
 
     def __repr__(self):
-        return '<User %r>' % self.username
+        return '<Users %r>' % self.username
 
 
 class Setting(UserMixin, db.Model):
@@ -35,14 +36,10 @@ class Setting(UserMixin, db.Model):
     value   = db.Column(db.String(80), nullable=True)
 
     def __repr__(self):
-#        return '<Setting %r >' %  self.key 
-        return '<Setting %r > %-20s : %10s' %  (self.id, self.key , self.value) 
-#        return f'<Setting> ("{self.id}","{self.key}",{self.value})'
-
+        return '<Setting %r > %-20s : %10s' %  (self.id, self.key , self.value)
 
 class Program(UserMixin, db.Model):
     __tablename__ = "program"
-
     id          = db.Column(db.Integer(), primary_key=True)
     name        = db.Column(db.String(80), unique=True, nullable=False)
     description = db.Column(db.String(80), unique=True, nullable=True)

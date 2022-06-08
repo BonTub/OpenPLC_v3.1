@@ -334,42 +334,7 @@ def generate_mbconfig(app):
                
             device_counter = 0
             for row in result:
-
-                mbconfig += """
-# ------------
-#   DEVICE """
-                mbconfig += str(device_counter)
-                mbconfig += """
-# ------------
-"""
-                mbconfig += 'device' + str(device_counter) + '.name = "' + row.dev_name + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.slave_id = "' + str(row.slave_id) + '"\n'
-                if ((str(row.dev_type) == 'ESP32') or (str(row.dev_type) == 'ESP8266') or (str(row.dev_type) == 'TCP')):
-                    mbconfig += 'device' + str(device_counter) + '.protocol = "TCP"\n'
-                    mbconfig += 'device' + str(device_counter) + '.address = "' + str(row.ip_address) + '"\n'
-                else:
-                    mbconfig += 'device' + str(device_counter) + '.protocol = "RTU"\n'
-                    if str(row.com_port ).startswith("COM"):
-                        port_name = "/dev/ttyS" + str(int(str(row.com_port).split("COM")[1]) - 1)
-                    else:
-                        port_name = str(row.com_port )
-                mbconfig += 'device' + str(device_counter) + '.address       = "' + port_name + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.IP_Port       = "' + str(row.ip_port) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.RTU_Baud_Rate = "' + str(row.baud_rate) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.RTU_Parity    = "' + str(row.parity) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.RTU_Data_Bits = "' + str(row.data_bits) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.RTU_Stop_Bits = "' + str(row.stop_bits) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.RTU_TX_Pause  = "' + str(row.pause) + '"\n\n'               
-                mbconfig += 'device' + str(device_counter) + '.Discrete_Inputs_Start        = "' + str(row.di_start) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.Discrete_Inputs_Size         = "' + str(row.di_size) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.Coils_Start                  = "' + str(row.coil_start) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.Coils_Size                   = "' + str(row.coil_size) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.Input_Registers_Start        = "' + str(row.ir_start) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.Input_Registers_Size         = "' + str(row.ir_size) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.Holding_Registers_Read_Start = "' + str(row.hr_read_start) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.Holding_Registers_Read_Size  = "' + str(row.hr_read_size) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.Holding_Registers_Start      = "' + str(row.hr_write_start) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.Holding_Registers_Size       = "' + str(row.hr_write_size) + '"\n'
+                mbconfig += mb_config(row,device_counter)
                 device_counter += 1
             print(mbconfig)
             
@@ -378,6 +343,46 @@ def generate_mbconfig(app):
             return
         # print(app.config['Slave_polling'])
     return
+
+
+def mb_config(row,device_counter):
+    mbconfig = """
+# ------------
+#   DEVICE """
+    mbconfig += str(device_counter)
+    mbconfig += """
+# ------------
+"""
+    mbconfig += 'device' + str(device_counter) + '.name = "' + row.dev_name + '"\n'
+    mbconfig += 'device' + str(device_counter) + '.slave_id = "' + str(row.slave_id) + '"\n'
+    if ((str(row.dev_type) == 'ESP32') or (str(row.dev_type) == 'ESP8266') or (str(row.dev_type) == 'TCP')):
+        mbconfig += 'device' + str(device_counter) + '.protocol = "TCP"\n'
+        mbconfig += 'device' + str(device_counter) + '.address = "' + str(row.ip_address) + '"\n'
+    else:
+        mbconfig += 'device' + str(device_counter) + '.protocol = "RTU"\n'
+        if str(row.com_port ).startswith("COM"):
+            port_name = "/dev/ttyS" + str(int(str(row.com_port).split("COM")[1]) - 1)
+        else:
+            port_name = str(row.com_port )
+    mbconfig += 'device' + str(device_counter) + '.address       = "' + port_name + '"\n'
+    mbconfig += 'device' + str(device_counter) + '.IP_Port       = "' + str(row.ip_port) + '"\n'
+    mbconfig += 'device' + str(device_counter) + '.RTU_Baud_Rate = "' + str(row.baud_rate) + '"\n'
+    mbconfig += 'device' + str(device_counter) + '.RTU_Parity    = "' + str(row.parity) + '"\n'
+    mbconfig += 'device' + str(device_counter) + '.RTU_Data_Bits = "' + str(row.data_bits) + '"\n'
+    mbconfig += 'device' + str(device_counter) + '.RTU_Stop_Bits = "' + str(row.stop_bits) + '"\n'
+    mbconfig += 'device' + str(device_counter) + '.RTU_TX_Pause  = "' + str(row.pause) + '"\n\n'               
+    mbconfig += 'device' + str(device_counter) + '.Discrete_Inputs_Start        = "' + str(row.di_start) + '"\n'
+    mbconfig += 'device' + str(device_counter) + '.Discrete_Inputs_Size         = "' + str(row.di_size) + '"\n'
+    mbconfig += 'device' + str(device_counter) + '.Coils_Start                  = "' + str(row.coil_start) + '"\n'
+    mbconfig += 'device' + str(device_counter) + '.Coils_Size                   = "' + str(row.coil_size) + '"\n'
+    mbconfig += 'device' + str(device_counter) + '.Input_Registers_Start        = "' + str(row.ir_start) + '"\n'
+    mbconfig += 'device' + str(device_counter) + '.Input_Registers_Size         = "' + str(row.ir_size) + '"\n'
+    mbconfig += 'device' + str(device_counter) + '.Holding_Registers_Read_Start = "' + str(row.hr_read_start) + '"\n'
+    mbconfig += 'device' + str(device_counter) + '.Holding_Registers_Read_Size  = "' + str(row.hr_read_size) + '"\n'
+    mbconfig += 'device' + str(device_counter) + '.Holding_Registers_Start      = "' + str(row.hr_write_start) + '"\n'
+    mbconfig += 'device' + str(device_counter) + '.Holding_Registers_Size       = "' + str(row.hr_write_size) + '"\n'
+    return mbconfig            
+
 
 
 '''

@@ -1,8 +1,9 @@
 # from curses import keyname
 import os
 # from os.path import exists
-from app import create_app, db, bcrypt
+from app import create_app, bcrypt
 from flask_migrate import upgrade, migrate, init, stamp
+from models import db
 from models import User
 from models import Setting
 from models import Slave_dev
@@ -10,13 +11,14 @@ from models import Slave_dev
 app = create_app()
 app.app_context().push()
 db.create_all()
+
 # migrate database to latest revision
 if not os.path.exists("migrations"):
-    init(
-    )  # init the migration version database directory in migrations directory
+    init( )  # init the migration version database directory in migrations directory
 stamp()
 migrate()
 upgrade()
+
 # add a adminuser
 adminuser = User(
   username='openplc1',

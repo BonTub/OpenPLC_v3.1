@@ -3,13 +3,14 @@ import subprocess
 import socket
 import errno
 import time
-from threading import Thread
+import os
+# from os import path, remove
+# from threading import Thread
 
-from app import db
+from models import db
 from models import Setting
 from models import Slave_dev
-import os
-from os import path, remove
+
 
 intervals = (
     ('weeks', 604800),  # 60 * 60 * 24 * 7
@@ -265,10 +266,10 @@ class runtime:
 def configure_runtime(app):
     global openplc_runtime
     with app.app_context():
-        session = db.session.session_factory()
+        # session = db.session.session_factory()
         try:
             # a list
-            result = session.query(Setting).all()
+            result = db.session.query(Setting).all()
         except:
             print("db session settings trouble")
             return
@@ -384,89 +385,4 @@ def mb_config(row,device_counter):
     return mbconfig            
 
 
-
-'''
-
-
-
-
-def generate_mbconfig():
-    database = "openplc.db"
-    conn = create_connection(database)
-    if (conn != None):
-        try:
-            cur = conn.cursor()
-            cur.execute("SELECT COUNT(*) FROM Slave_dev")
-            row = cur.fetchone()
-            num_devices = int(row[0])
-            mbconfig = 'Num_Devices = "' + str(num_devices) + '"'
-            cur.close()
-            
-            cur=conn.cursor()
-            cur.execute("SELECT * FROM Settings")
-            rows = cur.fetchall()
-            cur.close()
-                    
-            for row in rows:
-                if (row[0] == "Slave_polling"):
-                    slave_polling = str(row[1])
-                elif (row[0] == "Slave_timeout"):
-                    slave_timeout = str(row[1])
-                    
-            mbconfig += '\nPolling_Period = "' + slave_polling + '"'
-            mbconfig += '\nTimeout = "' + slave_timeout + '"'
-            
-            cur = conn.cursor()
-            cur.execute("SELECT * FROM Slave_dev")
-            rows = cur.fetchall()
-            cur.close()
-            conn.close()
-            
-            device_counter = 0
-            for row in rows:
-                mbconfig += """
-# ------------
-#   DEVICE """
-                mbconfig += str(device_counter)
-                mbconfig += """
-# ------------
-"""
-                mbconfig += 'device' + str(device_counter) + '.name = "' + str(row[1]) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.slave_id = "' + str(row[3]) + '"\n'
-                if (str(row[2]) == 'ESP32' or str(row[2]) == 'ESP8266' or str(row[2]) == 'TCP'):
-                    mbconfig += 'device' + str(device_counter) + '.protocol = "TCP"\n'
-                    mbconfig += 'device' + str(device_counter) + '.address = "' + str(row[9]) + '"\n'
-                else:
-                    mbconfig += 'device' + str(device_counter) + '.protocol = "RTU"\n'
-                    if (str(row[4]).startswith("COM")):
-                        port_name = "/dev/ttyS" + str(int(str(row[4]).split("COM")[1]) - 1)
-                    else:
-                        port_name = str(row[4])
-                    mbconfig += 'device' + str(device_counter) + '.address = "' + port_name + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.IP_Port = "' + str(row[10]) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.RTU_Baud_Rate = "' + str(row[5]) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.RTU_Parity = "' + str(row[6]) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.RTU_Data_Bits = "' + str(row[7]) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.RTU_Stop_Bits = "' + str(row[8]) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.RTU_TX_Pause = "' + str(row[21]) + '"\n\n'
-                
-                mbconfig += 'device' + str(device_counter) + '.Discrete_Inputs_Start = "' + str(row[11]) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.Discrete_Inputs_Size = "' + str(row[12]) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.Coils_Start = "' + str(row[13]) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.Coils_Size = "' + str(row[14]) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.Input_Registers_Start = "' + str(row[15]) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.Input_Registers_Size = "' + str(row[16]) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.Holding_Registers_Read_Start = "' + str(row[17]) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.Holding_Registers_Read_Size = "' + str(row[18]) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.Holding_Registers_Start = "' + str(row[19]) + '"\n'
-                mbconfig += 'device' + str(device_counter) + '.Holding_Registers_Size = "' + str(row[20]) + '"\n'
-                device_counter += 1
-                
-            with open('./mbconfig.cfg', 'w+') as f: f.write(mbconfig)
-            
-        except Error as e:
-            print("error connecting to the database" + str(e))
-    else:
-        print("Error opening DB")
- '''
 openplc_runtime = runtime()

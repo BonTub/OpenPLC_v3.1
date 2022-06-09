@@ -1,5 +1,7 @@
 
+from ast import Pass
 from datetime import timedelta
+from this import d
 from sqlalchemy.exc import (
     IntegrityError,
     DataError,
@@ -22,8 +24,9 @@ from flask_login import (
     login_required,
 )
 
-from app import create_app, db, login_manager, bcrypt
+from app import create_app, login_manager, bcrypt
 # import models
+from models import db
 from models import User
 from models import Setting
 from forms import login_form, register_form, setting_form
@@ -40,10 +43,14 @@ app = create_app()
 # openplc_runtime = openplc.runtime()
 configure_runtime(app)
 
-
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+@login_manager.unauthorized_handler
+def unauthorized_handler():
+    return 'Unauthorized'
+    
 
 
 @app.before_request
@@ -126,31 +133,30 @@ def register():
                            btn_action="Register account",
                            )
 
-
-@app.route('/settings/', methods=['GET', 'POST'])
-def settings():
-    if not current_user.is_authenticated:
-        return redirect(url_for('login'))
-    
-    # monitor.stop_monitor()
-    # if (openplc_runtime.status() == "Compiling"):
-        # return draw_compiling_page()
-        # return flask.redirect(flask.url_for('draw_compiling_page'))
-
+# crud settings table
+@app.route('/settings/update', methods=['POST'])
+def update_settings():
+    #firstname = request.form['updatefirstname']
+    #lastname = request.form['updatelastname']
+    #phone_no = request.form['updatephone_no']
+    #contact_id = request.form['contact_id']
     form = setting_form()
+
     if form.validate_on_submit():
         try:
+            id  = form.key.id
             key = form.key.data
             value = form.value.data
             newsetting = Setting(
+                id=id,
                 key=key,
                 value=value,
             )
 
-            db.session.add(newsetting)
+            db.session.update(newsetting)
             db.session.commit()
             flash("Setting created ", "success")
-            return redirect(url_for("dashboard"))
+            return redirect(url_for("settings"))
 
         except InvalidRequestError:
             db.session.rollback()
@@ -170,11 +176,94 @@ def settings():
         except BuildError:
             db.session.rollback()
             flash("An error occured !", "danger")
+    # cur.execute("update contacts SET firstname = %s , lastname = %s , phone_no = %s  WHERE contact_id = %s" , (firstname,lastname,phone_no,contact_id));
+    # conn.commit();
+    return redirect(url_for('settings'))  
+
+
+
+@app.route('/settings/', methods=['GET', 'POST'])
+@app.route('/settings/<crud_method>/<item_id>', methods=['GET'])
+def settings( item_id = None, crud_method = None):
+    item_id = item_id or ''
+    crud_method = crud_method or ''
+    #if not current_user.is_authenticated:
+    #    return redirect(url_for('login'))
+    
+    # monitor.stop_monitor()
+    # if (openplc_runtime.status() == "Compiling"):
+        # return draw_compiling_page()
+        # return flask.redirect(flask.url_for('draw_compiling_page'))
+
+
+    try:
+        # a list
+        result = db.session.query(Setting).all()
+    except:
+        print("db session settings trouble")
+
+    form = setting_form()
+
+    if (item_id != ''):
+        if (crud_method == 'edit'):
+            # obj = Setting.query.filter_by(id=item_id).one()
+            obj = Setting.query.get(item_id)
+            print(obj)
+            return render_template("setting.html",
+                                  form=form,
+                                  text="Edit Setting",
+                                  title="Setting",
+                                  btn_action="Edit Setting",
+                                  data=result,
+                                  item=item_id,
+                                  )
+        if (crud_method == 'delete'):
+            # obj = Setting.query.filter_by(id=item_id).one()
+            obj = Setting.query.get(item_id)
+            db.session.delete(obj)
+            db.session.commit()
+        return redirect(url_for('settings'))
+
+
+    if form.validate_on_submit():
+        try:
+            key = form.key.data
+            value = form.value.data
+            newsetting = Setting(
+                key=key,
+                value=value,
+            )
+
+            db.session.add(newsetting)
+            db.session.commit()
+            flash("Setting created ", "success")
+            return redirect(url_for("settings"))
+
+        except InvalidRequestError:
+            db.session.rollback()
+            flash("Something went wrong! ", "danger")
+        except IntegrityError:
+            db.session.rollback()
+            flash("Record already exists! ", "warning")
+        except DataError:
+            db.session.rollback()
+            flash("Invalid Entry", "warning")
+        except InterfaceError:
+            db.session.rollback()
+            flash("Error connecting to the database", "danger")
+        except DatabaseError:
+            db.session.rollback()
+            flash("Error connecting to the database", "danger")
+        except BuildError:
+            db.session.rollback()
+            flash("An error occured !", "danger")
+
     return render_template("setting.html",
                            form=form,
                            text="Create Setting",
                            title="Setting",
                            btn_action="add Setting",
+                           data=result,
                            )
          
     if (flask.request.method == 'GET'):

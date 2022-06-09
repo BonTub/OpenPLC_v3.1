@@ -30,3 +30,5 @@ webserver/migrations/versions/__pycache__
 *.db
 webserver/*.db
 webserver/ormsnippets.py
+*.ipynb_checkpoints
+Untitled*

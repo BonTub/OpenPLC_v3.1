@@ -32,3 +32,4 @@ webserver/*.db
 webserver/ormsnippets.py
 *.ipynb_checkpoints
 Untitled*
+*.swp

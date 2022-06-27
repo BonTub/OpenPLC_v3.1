@@ -61,8 +61,10 @@ def session_handler():
 
 @app.route("/", methods=("GET", "POST"), strict_slashes=False)
 def index():
-    return render_template("index.html", title="OpenPLC_V3.1 Monitor")
-
+    if current_user.is_authenticated:
+        return render_template("dashboard.html", title="OpenPLC_V3.1 Monitor", user=current_user)
+    else:
+        return redirect(url_for('login'))
 
 @app.route("/login/", methods=("GET", "POST"), strict_slashes=False)
 def login():

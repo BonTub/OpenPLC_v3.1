@@ -11,51 +11,39 @@
     {% if not current_user.is_authenticated %}
          <a href="{{url_for('login')}}">Sign in/Sign Up</a>
     {% endif %}
-    <h1>Settings {{ current_user.username }}</h1>
+    <h1>Settings</h1>
 
-
-<!-- </div>
-<div style="margin-left:320px; margin-right:70px">
-    <div style="w3-container">
-        <br>
-        <h2>Settings</h2>
-        <form id        = "uploadForm"
-            enctype     = "multipart/form-data"
-            action      = "settings"
-            method      = "post"
-            onsubmit    = "return validateForm()">
-            
-            <label class="container">
-                <b>Enable Modbus Server</b>"""
-
- -->
 <div class="container">
     <div class="row mt-4">
         <div class="col-lg-5 col-md-6 m-auto card p-4">
-
-        {% if item %}
-            <form action="{{ url_for('update_settings') }}" method="post">
-                <input type="text" name="key" placeholder="KEY" value="{{item.key}}">
-                <input type="text" name="value" placeholder="VALUE" value="{{item.value}}">
-                <input type="hidden" name="setting_id" value="{{item.id}}">
-                <input type="submit">
-                <a href="/settings" >Cancel</a>
-            </form>
-        {% else %}
-            <form action="{{ url_for('settings') }}" method="post">
-                <input type="text" name="key" placeholder="KEY" >
-                <input type="text" name="value" placeholder="VALUE" >
-                <input type="hidden" name="setting_id">
-                <input type="submit">
-            </form>
-        {% endif %}
-            <table>
-                {{item}}
-                <tr>
+            <table class="table table-responsive table-striped">
+                <thead>
                   <th>Key</th>
                   <th>Value</th>
                   <th>Action</th>
-                </tr>
+                </thead
+        {% if item %}
+            <form action="{{ url_for('update_settings') }}" method="post">
+                <tr>
+                <td><input type="text" name="key" placeholder="KEY" value="{{item.key}}"></td>
+                <td><input type="text" name="value" placeholder="VALUE" value="{{item.value}}"></td>
+                <input type="hidden" name="setting_id" value="{{item.id}}">
+                <td><input type="submit">subm</td>
+                <td><a href="/settings/update/{{item.id}}" >Update</a></td>
+                <td><a href="/settings" >Cancel</a></td>
+                <tr>
+            </form>
+        {% else %}
+   
+                <form action="{{ url_for('settings') }}" method="post">
+                    <tr>
+                    <td><input type="text" name="key" placeholder="KEY" ></td>
+                    <td><input type="text" name="value" placeholder="VALUE" ></td>
+                    <input type="hidden" name="setting_id">
+                    <td><input type="submit"></td>
+                    </tr>
+                </form>
+             {% endif %}
                 {% for i in data %}
         
                     <tr>
@@ -63,6 +51,8 @@
                         <td>{{ i.value }}</td>
                         <td>
                             <a href="/settings/edit/{{i.id}}" >Edit</a>
+                        </td>
+                        <td>
                             <a href="/settings/delete/{{i.id}}" >Delete</a>                    
                         </td>
                     </tr>
@@ -95,8 +85,6 @@
                     {{ form.key(class_="form-control",placeholder="key")}}
                 </div>
             
-
-
                 <div class="form-group mb-3">
                     {{ form.value(class_="form-control",placeholder="value")}}
                 </div>

@@ -50,7 +50,6 @@ def load_user(user_id):
 @login_manager.unauthorized_handler
 def unauthorized_handler():
     return 'Unauthorized'
-    
 
 
 @app.before_request
@@ -58,13 +57,31 @@ def session_handler():
     session.permanent = True
     app.permanent_session_lifetime = timedelta(minutes=10)
 
-
+@app.route("/home", methods=("GET", "POST"), strict_slashes=False)
 @app.route("/", methods=("GET", "POST"), strict_slashes=False)
 def index():
     if current_user.is_authenticated:
-        return render_template("dashboard.html", title="OpenPLC_V3.1 Monitor", user=current_user)
+        return render_template("dashboard.html", title="OpenPLC_V3.1 Home", user=current_user)
     else:
         return redirect(url_for('login'))
+    
+@app.route("/programs", methods=("GET", "POST"), strict_slashes=False)
+def program():
+    if current_user.is_authenticated:
+        return render_template("programs.html", title="OpenPLC_V3.1 Programs", user=current_user)
+    else:
+        return redirect(url_for('login'))
+
+from flask import stream_with_context, request, Response
+
+@app.route('/runtime_logs', strict_slashes=False)
+def streamed_response():
+    @stream_with_context
+    def generate():
+        yield 'Hello RUNTIME_LOGS '
+        yield request.args['name']
+        yield '!'
+    return Response(generate())
 
 @app.route("/login/", methods=("GET", "POST"), strict_slashes=False)
 def login():

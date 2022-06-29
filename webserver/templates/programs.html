@@ -7,6 +7,149 @@
     
 {% endif %}
 
-<h1>programs</h1>
+<!-- scr="{{ url_for('static', filename='images/foo.jpg') }}" -->
+{{ name  }}
+<div style="margin-left:320px; margin-right:70px">
+    <div style="w3-container">
+        <br>
+        <p>Here you can upload a new program to OpenPLC or revert back to a previous uploaded program shown on the table.</p>
+        <table class='table'>
+            <thead style='background-color: white'>
+                <th>id</th>
+                <th>name</th>
+                <th>Description</th>
+                <th>file</th>
+                <th>Date Uploaded</th>
+                <th>action</th>
+            </thead>
+            <tbody>
+                {% for p in data %}     
+                <tr onclick='document.location='reload-program?table_id={{p.id}}  >
+                    {{p}}
+                    <td>{{ p.id}}</td>
+                    <td>{{ p.name }}</td>
+                    <td>{{ p.description }}</td>
+                    <td>{{ p.file }}</td>
+                    <td>{{ p.date_upload }}</td>
+                    <td>
+                        <a href="/edit/{{p.id}}" >Edit</a>
+                    </td>
+                    <td>
+                        <a href="/delete/{{p.id}}" >Delete</a>                    
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+                     
+        <!-- for row in rows:
+        return_str += "<tr onclick=\"document.location='reload-program?table_id=" + str(row[0]) + "'\">"
+        return_str += "<td>" + str(row[1]) + "</td><td>" + str(row[2]) + "</td><td>" + time.strftime('%b %d, %Y - %I:%M%p', time.localtime(row[3])) + "</td></tr>"
+    </tr> -->
+
+        <a href="programs?list_all=1" style="text-align:right; float:right; color:black; font-weight:bold;">List all programs</a>
+        <br>
+        <br>
+        <h2>Upload Program</h2>
+<!--         <form   id    = "uploadForm"
+            enctype   =  "multipart/form-data"
+            action    =  "upload"
+            method    =  "post">
+            <br>
+            <input type="file" name="file" id="file" class="inputfile" accept=".st">
+            <input type="submit" value="Upload Program" name="submit">
+        </form> -->
+
+        <form   id    = "uploadForm"
+            enctype   = "multipart/form-data"
+            action    = "{{ request.path }}"
+            class     = "card-body"
+            method    = "post">
+
+            {{ form.csrf_token }}
+            {# the above could also be: {{ form.hidden_tag() }} #}
+            {{ form.hidden_tag() }}
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{category}} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <div class="form-group mb-3">
+                {{ form.file(class_="form-control",placeholder="file")}}
+            </div>
+
+            {% for error in form.file.errors %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                {{ error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor%}
+
+            <div class="form-group mb-3">
+                {{ form.name(class_="form-control",placeholder="name")}}
+            </div>
+
+            {% for error in form.name.errors %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                {{ error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor%}
+
+
+            <div class="form-group mb-3">
+                {{ form.description(class_="form-control",placeholder="Description")}}
+                {{ form.description.label }} {{ form.description(size=80) }}
+            </div>
+
+            {% for error in form.description.errors %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                {{ error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor%}
+
+            <div class="form-group mb-3">
+                {{ form.date(class_="form-control",placeholder="Date")}}
+            </div>
+
+            {% for error in form.date.errors %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                {{ error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor%}
+
+            <div class="form-group mb-3">
+                {{ form.date_upload(class_="form-control",placeholder="DateInteger")}}
+            </div>
+
+            {% for error in form.date_upload.errors %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                {{ error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor%}
+
+            <div class="text-center">
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-block btn-primary mb-3">UPLOAD {{ btn_action }} </button>
+                    <!-- <button type="button" class="btn-btn-block btn-primary mb-1" aria-label="Edit"> EDIT </button> -->
+                </div>
+               
+            </div>
+
+        </form>
+        
+<h2>OpenPLC Compiling program {{name}} </h2>
 
 {% endblock %}

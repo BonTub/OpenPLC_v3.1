@@ -23,29 +23,28 @@
                   <th>Action</th>
                 </thead
         {% if item %}
-            <form action="{{ url_for('update_settings') }}" method="post">
+                <form action="{{ url_for('update_settings') }}" method="post">
                 <tr>
-                <td><input type="text" name="key" placeholder="KEY" value="{{item.key}}"></td>
-                <td><input type="text" name="value" placeholder="VALUE" value="{{item.value}}"></td>
-                <input type="hidden" name="setting_id" value="{{item.id}}">
-                <td><input type="submit">subm</td>
-                <td><a href="/settings/update/{{item.id}}" >Update</a></td>
-                <td><a href="/settings" >Cancel</a></td>
-                <tr>
-            </form>
-        {% else %}
-   
+                    <td><input type="text" name="key" placeholder="KEY" value="{{item.key}}"></td>
+                    <td><input type="text" name="value" placeholder="VALUE" value="{{item.value}}"></td>
+                    <td><input type="hidden" name="setting_id" value="{{item.id}}"></td>
+                    <td><input type="submit"></td>
+                    <td><a href="/settings/edit/{{item.id}}" >Update</a></td>
+                    <td><a href="/settings" >Cancel</a></td>
+                </tr>
+                </form>
+        {% else %}   
                 <form action="{{ url_for('settings') }}" method="post">
                     <tr>
-                    <td><input type="text" name="key" placeholder="KEY" ></td>
-                    <td><input type="text" name="value" placeholder="VALUE" ></td>
-                    <input type="hidden" name="setting_id">
-                    <td><input type="submit"></td>
+                        <td><input type="text" name="key" placeholder="KEY"></td>
+                        <td><input type="text" name="value" placeholder="VALUE"></td>
+                        <input type="hidden" name="setting_id">
+                        <td><input type="submit"></td>
                     </tr>
                 </form>
-             {% endif %}
+        {% endif %}
                 {% for i in data %}
-        
+    
                     <tr>
                         <td>{{ i.key }}</td>
                         <td>{{ i.value }}</td>
@@ -62,8 +61,6 @@
                 {{ form.csrf_token }}
                 {# the above could also be: {{ form.hidden_tag() }} #}
                 {{ form.hidden_tag() }}
-
-
                 {% with messages = get_flashed_messages(with_categories=true) %}
                 <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
                 {% if messages %}

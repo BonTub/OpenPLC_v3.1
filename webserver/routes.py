@@ -9,10 +9,27 @@ from sqlalchemy.exc import (
     InterfaceError,
     InvalidRequestError,
 )
-from flask import (Flask, render_template, redirect, flash, url_for, session)
 
-from werkzeug.routing import BuildError
+#from nav import nav
+#from frontend import frontend
 
+from flask import (
+    Flask,
+    Blueprint,
+    render_template,
+    redirect,
+    flash,
+    url_for,
+    session,
+    send_from_directory,
+    stream_with_context,
+    request,
+    Response,
+)
+
+#from werkzeug.routing import BuildError
+import os
+from werkzeug.utils import secure_filename
 from flask_bcrypt import Bcrypt, generate_password_hash, check_password_hash
 
 from flask_login import (
@@ -29,7 +46,15 @@ from app import create_app, login_manager, bcrypt
 from models import db
 from models import User
 from models import Setting
-from forms import login_form, register_form, setting_form
+from models import Program
+
+from forms import (
+    LoginForm,
+    RegisterForm,
+    SettingForm,
+    ProgramForm,
+    SignupForm
+    )
 
 from openplc import openplc_runtime, configure_runtime
 
@@ -65,27 +90,83 @@ def index():
     else:
         return redirect(url_for('login'))
     
-@app.route("/programs", methods=("GET", "POST"), strict_slashes=False)
-def program():
-    if current_user.is_authenticated:
-        return render_template("programs.html", title="OpenPLC_V3.1 Programs", user=current_user)
-    else:
-        return redirect(url_for('login'))
+    
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
-from flask import stream_with_context, request, Response
+
+
+@app.route('/uploads/<name>')
+def download_file(name):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], name)
+
+
+@login_required
+@app.route('/upload-program-action', methods=['GET', 'POST'])
+@app.route('/program/edit', methods=['GET', 'POST'])
+@app.route('/upload-program', methods=['GET', 'POST'])
+@app.route('/programs/<crud_method>/<item_id>', methods=['GET','POST'])
+@app.route("/programs", methods=("GET", "POST"), strict_slashes=False)
+def program( item_id = None, crud_method = None):
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    
+    form = ProgramForm()
+    if form.validate_on_submit():
+        flash('Start Date is : {} End Date is : {}'.format(form.date.data, form.date.data))
+       
+        return redirect('/success')
+    
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No file part')
+        file = request.files['file']
+        # If the user does not select a file, the browser submits an
+        # empty file without a filename.
+        if file.filename == '':
+            flash('No selected file')
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return redirect(url_for('program', name=filename))
+        
+        return redirect(request.url)
+    # return '''
+    # <!doctype html>
+    # <title>Upload new File</title>
+    # <h1>Upload new File</h1>
+    # <form method=post enctype=multipart/form-data>
+    #   <input type=file name=file>
+    #   <input type=submit value=Upload>
+    # </form>
+    # '''
+    
+
+    
+    try:
+        result = db.session.query(Program).all()
+        print(result)
+        # Program.query.get(int(user_id))
+    except:
+        print("db session programs trouble")
+
+    return render_template("programs.html", title="OpenPLC_V3.1 Programs", form=form, data=result, user=current_user)
+
 
 @app.route('/runtime_logs', strict_slashes=False)
 def streamed_response():
     @stream_with_context
     def generate():
         yield 'Hello RUNTIME_LOGS '
-        yield request.args['name']
+        # yield request.args['name']
         yield '!'
     return Response(generate())
 
 @app.route("/login/", methods=("GET", "POST"), strict_slashes=False)
 def login():
-    form = login_form()
+    form = LoginForm()
 
     if form.validate_on_submit():
         try:
@@ -109,7 +190,7 @@ def login():
 # Register route
 @app.route("/register/", methods=("GET", "POST"), strict_slashes=False)
 def register():
-    form = register_form()
+    form = RegisterForm()
     if form.validate_on_submit():
         try:
             email = form.email.data
@@ -159,7 +240,7 @@ def update_settings():
     #lastname = request.form['updatelastname']
     #phone_no = request.form['updatephone_no']
     #contact_id = request.form['contact_id']
-    form = setting_form()
+    form = SettingForm()
 
     if form.validate_on_submit():
         try:
@@ -195,19 +276,17 @@ def update_settings():
         except BuildError:
             db.session.rollback()
             flash("An error occured !", "danger")
-    # cur.execute("update contacts SET firstname = %s , lastname = %s , phone_no = %s  WHERE contact_id = %s" , (firstname,lastname,phone_no,contact_id));
-    # conn.commit();
+
     return redirect(url_for('settings'))  
 
-
-
+@login_required
 @app.route('/settings/', methods=['GET', 'POST'])
 @app.route('/settings/<crud_method>/<item_id>', methods=['GET'])
 def settings( item_id = None, crud_method = None):
     item_id = item_id or ''
     crud_method = crud_method or ''
-    #if not current_user.is_authenticated:
-    #    return redirect(url_for('login'))
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
     
     # monitor.stop_monitor()
     # if (openplc_runtime.status() == "Compiling"):
@@ -221,13 +300,13 @@ def settings( item_id = None, crud_method = None):
     except:
         print("db session settings trouble")
 
-    form = setting_form()
+    form = SettingForm()
 
     if (item_id != ''):
         if (crud_method == 'edit'):
             # obj = Setting.query.filter_by(id=item_id).one()
             obj = Setting.query.get(item_id)
-            print(obj)
+            #print(obj)
             return render_template("setting.html",
                                   form=form,
                                   text="Edit Setting",
@@ -284,240 +363,6 @@ def settings( item_id = None, crud_method = None):
                            btn_action="add Setting",
                            data=result,
                            )
-         
-    if (flask.request.method == 'GET'):
-        return_str = pages.w3_style + pages.settings_style + draw_top_div() + pages.settings_head
-        return_str += draw_status()
-        return_str += """
-        </div>
-        <div style="margin-left:320px; margin-right:70px">
-            <div style="w3-container">
-                <br>
-                <h2>Settings</h2>
-                <form id        = "uploadForm"
-                    enctype     = "multipart/form-data"
-                    action      = "settings"
-                    method      = "post"
-                    onsubmit    = "return validateForm()">
-                    
-                    <label class="container">
-                        <b>Enable Modbus Server</b>"""
-        
-        database = "openplc.db"
-        conn = create_connection(database)
-        if (conn != None):
-            try:
-                cur = conn.cursor()
-                cur.execute("SELECT * FROM Settings")
-                rows = cur.fetchall()
-                cur.close()
-                conn.close()
-                
-                for row in rows:
-                    if (row[0] == "Modbus_port"):
-                        modbus_port = str(row[1])
-                    elif (row[0] == "Dnp3_port"):
-                        dnp3_port = str(row[1])
-                    elif (row[0] == "Enip_port"):
-                        enip_port = str(row[1])
-                    elif (row[0] == "Pstorage_polling"):
-                        pstorage_poll = str(row[1])
-                    elif (row[0] == "Start_run_mode"):
-                        start_run = str(row[1])
-                    elif (row[0] == "Slave_polling"):
-                        slave_polling = str(row[1])
-                    elif (row[0] == "Slave_timeout"):
-                        slave_timeout = str(row[1])
-                
-                if (modbus_port == 'disabled'):
-                    return_str += """
-                        <input id="modbus_server" type="checkbox">
-                        <span class="checkmark"></span>
-                    </label>
-                    <label for='modbus_server_port'><b>Modbus Server Port</b></label>
-                    <input type='text' id='modbus_server_port' name='modbus_server_port' value='502'>"""
-                else:
-                    return_str += """
-                        <input id="modbus_server" type="checkbox" checked>
-                        <span class="checkmark"></span>
-                    </label>
-                    <label for='modbus_server_port'><b>Modbus Server Port</b></label>
-                    <input type='text' id='modbus_server_port' name='modbus_server_port' value='""" + modbus_port + "'>"
-                    
-                return_str += """
-                    <br>
-                    <br>
-                    <br>
-                    <label class="container">
-                        <b>Enable DNP3 Server</b>"""
-                
-                if (dnp3_port == 'disabled'):
-                    return_str += """
-                        <input id="dnp3_server" type="checkbox">
-                        <span class="checkmark"></span>
-                    </label>
-                    <label for='dnp3_server_port'><b>DNP3 Server Port</b></label>
-                    <input type='text' id='dnp3_server_port' name='dnp3_server_port' value='20000'>"""
-                else:
-                    return_str += """
-                        <input id="dnp3_server" type="checkbox" checked>
-                        <span class="checkmark"></span>
-                    </label>
-                    <label for='dnp3_server_port'><b>DNP3 Server Port</b></label>
-                    <input type='text' id='dnp3_server_port' name='dnp3_server_port' value='""" + dnp3_port + "'>"
-                
-                return_str += """
-                    <br>
-                    <br>
-                    <br>
-                    <label class="container">
-                        <b>Enable EtherNet/IP Server</b>"""
-                        
-                if (enip_port == 'disabled'):
-                    return_str += """
-                        <input id="enip_server" type="checkbox">
-                        <span class="checkmark"></span>
-                    </label>
-                    <label for='enip_server_port'><b>EtherNet/IP Server Port</b></label>
-                    <input type='text' id='enip_server_port' name='enip_server_port' value='44818'>"""
-                else:
-                    return_str += """
-                        <input id="enip_server" type="checkbox" checked>
-                        <span class="checkmark"></span>
-                    </label>
-                    <label for='enip_server_port'><b>EtherNet/IP Server Port</b></label>
-                    <input type='text' id='enip_server_port' name='enip_server_port' value='""" + enip_port + "'>"
-                
-                return_str += """
-                    <br>
-                    <br>
-                    <br>
-                    <label class="container">
-                        <b>Enable Persistent Storage Thread</b>"""
-                        
-                if (pstorage_poll == 'disabled'):
-                    return_str += """
-                        <input id="pstorage_thread" type="checkbox">
-                        <span class="checkmark"></span>
-                    </label>
-                    <label for='pstorage_thread_poll'><b>Persistent Storage polling rate</b></label>
-                    <input type='text' id='pstorage_thread_poll' name='pstorage_thread_poll' value='10'>"""
-                else:
-                    return_str += """
-                        <input id="pstorage_thread" type="checkbox" checked>
-                        <span class="checkmark"></span>
-                    </label>
-                    <label for='pstorage_thread_poll'><b>Persistent Storage polling rate</b></label>
-                    <input type='text' id='pstorage_thread_poll' name='pstorage_thread_poll' value='""" + pstorage_poll + "'>"
-                
-                return_str += """
-                    <br>
-                    <br>
-                    <br>
-                    <label class="container">
-                        <b>Start OpenPLC in RUN mode</b>"""
-                        
-                if (start_run == 'false'):
-                    return_str += """
-                        <input id="auto_run" type="checkbox">
-                        <span class="checkmark"></span>
-                    </label>
-                    <input type='hidden' value='false' id='auto_run_text' name='auto_run_text'/>"""
-                else:
-                    return_str += """
-                        <input id="auto_run" type="checkbox" checked>
-                        <span class="checkmark"></span>
-                    </label>
-                    <input type='hidden' value='true' id='auto_run_text' name='auto_run_text'/>"""
-                
-                return_str += """
-                    <br>
-                    <h2>Slave Devices</h2>
-                    <label for='slave_polling_period'><b>Polling Period (ms)</b></label>
-                    <input type='text' id='slave_polling_period' name='slave_polling_period' value='""" + slave_polling + "'>"
-                
-                return_str += """
-                    <br>
-                    <br>
-                    <br>
-                    <label for='slave_timeout'><b>Timeout (ms)</b></label>
-                    <input type='text' id='slave_timeout' name='slave_timeout' value='""" + slave_timeout + "'>"
-                
-                return_str += pages.settings_tail
-                
-            except Error as e:
-                return_str += "error connecting to the database" + str(e)
-        else:
-            return_str += "Error opening DB"
-        return return_str
-    elif (flask.request.method == 'POST'):
-        modbus_port = flask.request.form.get('modbus_server_port')
-        dnp3_port = flask.request.form.get('dnp3_server_port')
-        enip_port = flask.request.form.get('enip_server_port')
-        pstorage_poll = flask.request.form.get('pstorage_thread_poll')
-        start_run = flask.request.form.get('auto_run_text')
-        slave_polling = flask.request.form.get('slave_polling_period')
-        slave_timeout = flask.request.form.get('slave_timeout')
-        
-        (modbus_port, dnp3_port, enip_port, pstorage_poll, start_run, slave_polling, slave_timeout) = sanitize_input(modbus_port, dnp3_port, enip_port, pstorage_poll, start_run, slave_polling, slave_timeout)
-        database = "openplc.db"
-        conn = create_connection(database)
-        if (conn != None):
-            try:
-                cur = conn.cursor()
-                if (modbus_port == None):
-                    cur.execute("UPDATE Settings SET Value = 'disabled' WHERE Key = 'Modbus_port'")
-                    conn.commit()
-                else:
-                    cur.execute("UPDATE Settings SET Value = ? WHERE Key = 'Modbus_port'", (str(modbus_port),))
-                    conn.commit()
-                    
-                if (dnp3_port == None):
-                    cur.execute("UPDATE Settings SET Value = 'disabled' WHERE Key = 'Dnp3_port'")
-                    conn.commit()
-                else:
-                    cur.execute("UPDATE Settings SET Value = ? WHERE Key = 'Dnp3_port'", (str(dnp3_port),))
-                    conn.commit()
-                    
-                if (enip_port == None):
-                    cur.execute("UPDATE Settings SET Value = 'disabled' WHERE Key = 'Enip_port'")
-                    conn.commit()
-                else:
-                    cur.execute("UPDATE Settings SET Value = ? WHERE Key = 'Enip_port'", (str(enip_port),))
-                    conn.commit()
-                    
-                if (pstorage_poll == None):
-                    cur.execute("UPDATE Settings SET Value = 'disabled' WHERE Key = 'Pstorage_polling'")
-                    conn.commit()
-                else:
-                    cur.execute("UPDATE Settings SET Value = ? WHERE Key = 'Pstorage_polling'", (str(pstorage_poll),))
-                    conn.commit()
-                    
-                if (start_run == 'true'):
-                    cur.execute("UPDATE Settings SET Value = 'true' WHERE Key = 'Start_run_mode'")
-                    conn.commit()
-                else:
-                    cur.execute("UPDATE Settings SET Value = 'false' WHERE Key = 'Start_run_mode'")
-                    conn.commit()
-                    
-                cur.execute("UPDATE Settings SET Value = ? WHERE Key = 'Slave_polling'", (str(slave_polling),))
-                conn.commit()
-                
-                cur.execute("UPDATE Settings SET Value = ? WHERE Key = 'Slave_timeout'", (str(slave_timeout),))
-                conn.commit()
-                
-                cur.close()
-                conn.close()
-                configure_runtime()
-                generate_mbconfig()
-                return flask.redirect(flask.url_for('dashboard'))
-                
-            except Error as e:
-                print("error connecting to the database" + str(e))
-                return 'Error connecting to the database. Make sure that your openplc.db file is not corrupt.<br><br>Error: ' + str(e)
-        else:
-            return 'Error connecting to the database. Make sure that your openplc.db file is not corrupt.'
-    
 
 
 @app.route("/logout")
@@ -526,6 +371,14 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-
 if __name__ == "__main__":
+    #Load information about current program on the openplc_runtime object
+    file = open("active_program", "r")
+    st_file = file.read()
+    st_file = st_file.replace('\r','').replace('\n','')
+    
+    reload(sys)
+    sys.setdefaultencoding('UTF8')
+    
+    
     app.run(debug=True)

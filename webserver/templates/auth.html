@@ -6,7 +6,8 @@
 <div class="container">
     <div class="row mt-4">
         <div class="col-lg-5 col-md-6 m-auto card p-4">
-            <form action="{{ request.path }}" method="POST" class="card-body">
+            <!-- use enctype="multipart/form-data" to enable request.files post data-->
+            <form action="{{ request.path }}" method="POST" class="card-body"  >
                 {{ form.csrf_token }}
 
                 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -20,11 +21,6 @@
                 {% endfor %}
                 {% endif %}
                 {% endwith %}
-
-                <div class="text-center">
-                    <h2>OpenPLC_V3.1</h2>
-                    <h5 class="text-primary">{{ text }}</h5>
-                </div>
                 
                 {% if request.path == '/register/' %}
                 <div class="form-group mb-3">
@@ -53,7 +49,8 @@
                 <div class="alert alert-warning alert-dismissible fade show" role="alert">
                     {{ error }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div> {% endfor%}
+                </div>
+                {% endfor%}
                 {% if request.path == '/register/' %}
                 <div class="form-group mb-3">
                     {{ form.cpwd(class_="form-control",placeholder="Confirm Password")}}
@@ -62,7 +59,8 @@
                 <div class="alert alert-warning alert-dismissible fade show" role="alert">
                     {{ error }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div> {% endfor%}
+                </div>
+                {% endfor%}
                 {% endif %}
                 <div class="text-center">
 

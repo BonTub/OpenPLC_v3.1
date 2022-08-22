@@ -17,8 +17,8 @@ import flask
 import flask_login
 
 from openplc import openplc_runtime, configure_runtime
-# openplc_runtime = openplc.runtime()
-# configure_runtime()
+openplc_runtime = openplc.runtime()
+configure_runtime()
 
 app = flask.Flask(__name__)
 app.secret_key = str(os.urandom(16))

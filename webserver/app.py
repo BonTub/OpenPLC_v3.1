@@ -1,12 +1,10 @@
 from flask import Flask
 from flask import session
-
 from flask_session import Session
 
 from flask_bcrypt import Bcrypt
 from flask_migrate import Migrate
 from flask_bootstrap import Bootstrap
-
 
 from flask_login import(
     UserMixin,
@@ -53,10 +51,10 @@ def create_app():
     login_manager.init_app(app)
     db.init_app(app)
     migrate.init_app(app, db)
-    # bcrypt.init_app(app)
+    bcrypt.init_app(app)
     # sess=Session()
     # sess.init_app(app)
-    # print (db.session)
+    # print(db.session)
     Bootstrap(app)
     
     # Our application uses blueprints as well; these go well with the

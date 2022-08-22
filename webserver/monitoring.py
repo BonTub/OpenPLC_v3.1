@@ -15,9 +15,17 @@ mb_client = None
 
 def parse_st(st_file):
     global debug_vars
+    if st_file is None:
+        pass
+    st_file="blank_program.st"
     filepath = './st_files/' + st_file
-    
-    st_program = open(filepath, 'r')
+    # f = open(filepath, "r")
+    # print(filepath.readable()) 
+    try:
+        st_program = open(filepath, 'r')
+    except:
+        pass
+        
     
     for line in st_program.readlines():
         if line.find(' AT ') > 0 and line.find('%') > 0 and line.find('(*') < 0 and line.find('*)') < 0:

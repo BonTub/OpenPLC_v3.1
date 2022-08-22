@@ -80,6 +80,7 @@ class runtime:
     project_name = ""
     project_description = ""
     runtime_status = "Stopped"
+    theprocess = 0
     
     def start_runtime(self):
         if (self.status() == "Stopped"):
@@ -91,7 +92,7 @@ class runtime:
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.connect(('localhost', 43628))
-                s.send('quit()\n')
+                s.send(b'quit()\n')
                 data = s.recv(1000)
                 s.close()
                 self.runtime_status = "Stopped"
@@ -124,7 +125,7 @@ class runtime:
     
     def status(self):
         if ('compilation_object' in globals()):
-            if (compilation_object.end_of_stream == False):
+            if (not compilation_object.end_of_stream):
                 return "Compiling"
         
         #If it is running, make sure that it really is running
@@ -132,7 +133,7 @@ class runtime:
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.connect(('localhost', 43628))
-                s.send('exec_time()\n')
+                s.send(b'exec_time()\n')
                 data = s.recv(10000)
                 s.close()
                 self.runtime_status = "Running"
@@ -235,7 +236,7 @@ class runtime:
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.connect(('localhost', 43628))
-                s.send('runtime_logs()\n')
+                s.send(b'runtime_logs()\n')
                 data = s.recv(1000000)
                 s.close()
                 return data

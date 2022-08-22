@@ -10,8 +10,8 @@ from sqlalchemy.exc import (
     InvalidRequestError,
 )
 
-#from nav import nav
-#from frontend import frontend
+from nav import nav
+from frontend import frontend
 
 from flask import (
     Flask,
@@ -29,6 +29,7 @@ from flask import (
 
 #from werkzeug.routing import BuildError
 import os
+import time
 from werkzeug.utils import secure_filename
 from flask_bcrypt import Bcrypt, generate_password_hash, check_password_hash
 
@@ -56,17 +57,21 @@ from forms import (
     SignupForm
     )
 
-from openplc import openplc_runtime, configure_runtime
-
 
 app = create_app()
 # init_app(app) see manage.py
 # app.app_context().push()
 
-
-# configure_openplc(app)
-# openplc_runtime = openplc.runtime()
+from openplc import openplc_runtime, configure_runtime
+import openplc
+import monitoring as monitor
+#configure_openplc(app)
+openplc_runtime = openplc.runtime()
+compilation_status_str=0
+compilation_object=0
 configure_runtime(app)
+
+monitor.parse_st(openplc_runtime.project_file)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -77,10 +82,17 @@ def unauthorized_handler():
     return 'Unauthorized'
 
 
+@login_manager.request_loader
+def request_loader(request):
+    pass
+
+
 @app.before_request
 def session_handler():
     session.permanent = True
     app.permanent_session_lifetime = timedelta(minutes=10)
+    session.modified =True
+   
 
 @app.route("/home", methods=("GET", "POST"), strict_slashes=False)
 @app.route("/", methods=("GET", "POST"), strict_slashes=False)
@@ -91,16 +103,69 @@ def index():
         return redirect(url_for('login'))
     
     
+@login_required
+@app.route('/start_plc')
+def start_plc():
+    global openplc_runtime
+#    if not current_user.is_authenticated:
+#        return redirect(url_for('login'))
+    
+    monitor.stop_monitor()
+    openplc_runtime.start_runtime()
+    time.sleep(1)
+    # configure_runtime()
+    configure_runtime(app)
+
+    monitor.cleanup()
+    monitor.parse_st(openplc_runtime.project_file)
+    return redirect(url_for('index'))
+    # return render_template("dashboard.html", title="OpenPLC_V3.1 Home", user=current_user)
+
+@login_required
+@app.route('/stop_plc')
+def stop_plc():
+    global openplc_runtime
+#    if (current_user.is_authenticated == False):
+#        return flask.redirect(flask.url_for('login'))
+#    else:
+    openplc_runtime.stop_runtime()
+    time.sleep(1)
+    monitor.stop_monitor()
+    #return redirect(url_for('dashboard'))
+    return redirect(url_for('index'))
+
+@login_required
+@app.route('/runtime_logs')
+def runtime_logs():
+    global openplc_runtime
+    return openplc_runtime.logs()
+  
+    
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
-
 
 
 @app.route('/uploads/<name>')
 def download_file(name):
     return send_from_directory(app.config["UPLOAD_FOLDER"], name)
 
+@login_required
+@app.route('/program/edit/<item_id>', methods=['GET', 'POST'])
+def edit_program(request=request, item_id=None):
+    # program = Program.get(...)
+    # obj = Setting.query.filter_by(id=item_id).one()
+    prog = Program.get(item_id)
+    form = ProgramForm(request.POST, obj=prog)
+
+    if request.POST and form.validate():
+        form.populate_obj(prog)
+        prog.save()
+        return redirect(url_for('/programs'))
+
+    # return render('edit.html', form=form, program=program)
+
+    return render_template("programs.html", title="OpenPLC_V3.1 Programs", form=form, program=prog, data=result, user=current_user)
 
 @login_required
 @app.route('/upload-program-action', methods=['GET', 'POST'])
@@ -116,7 +181,7 @@ def program( item_id = None, crud_method = None):
     if form.validate_on_submit():
         flash('Start Date is : {} End Date is : {}'.format(form.date.data, form.date.data))
        
-        return redirect('/success')
+        return redirect('/programs')
     
     if request.method == 'POST':
         # check if the post request has the file part

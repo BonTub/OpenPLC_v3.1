@@ -37,6 +37,7 @@ from wtforms import (
 
 from wtforms.validators import (
     InputRequired,
+    DataRequired,
     Length,
     EqualTo,
     Email,
@@ -52,8 +53,9 @@ import models
 #from models import Setting
 
 class SignupForm(Form):
-    name = StringField(u'Your name', validators=[InputRequired()])
-    password = StringField(u'Your favorite password', validators=[InputRequired()])
+    sample_file = FileField(u'Your favorite file')
+    name = StringField(u'Your name', validators=[DataRequired()])
+    password = StringField(u'Your favorite password', validators=[DataRequired()])
     email = StringField(u'Your email address', validators=[Email()])
     birthday = DateField(u'Your birthday')
 
@@ -62,9 +64,9 @@ class SignupForm(Form):
     a_integer = IntegerField(u'An integer')
 
     now = DateTimeField(u'Current time', description='...for no particular reason')
-    sample_file = FileField(u'Your favorite file')
+
     eula = BooleanField(u'I did not read the terms and conditions',
-                        validators=[InputRequired('You must agree to not agree!')])
+                        validators=[DataRequired('You must agree to not agree!')])
 
     submit = SubmitField(u'Signup')
 
@@ -124,6 +126,15 @@ class RegisterForm(FlaskForm):
     #   <input type=submit value=Upload>
     # </form>
     # '''
+    
+class SearchForm(FlaskForm):
+    """
+    We expect search queries to come externally, thus we don't want CSRF
+    even though it's set up on the base form.
+    """
+    class Meta:
+        # This overrides the value from the base form.
+        csrf = False
     
 class ProgramForm(FlaskForm):
     # remember to include in <form ..> : enctype="multipart/form-data"

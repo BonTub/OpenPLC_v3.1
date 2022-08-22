@@ -7,10 +7,13 @@ public/
 *.pyc
 
 # IDE files for Visual Studio Code and Visual Studio
-CMakeSettings.json
 *.vscode/
 *.vs/
-
+CMakeSettings.json
+CMakeFiles/
+*.deps/
+*.libs/
+utils/*/autom4*te.cache
 # Build directories
 webserver/bin
 webserver/build
@@ -33,3 +36,6 @@ webserver/ormsnippets.py
 *.ipynb_checkpoints
 Untitled*
 *.swp
+*.o
+*.Po
+*.Plo

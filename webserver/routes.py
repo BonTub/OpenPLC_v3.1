@@ -1,4 +1,3 @@
-
 from ast import Pass
 from datetime import timedelta
 from this import d
@@ -27,7 +26,7 @@ from flask import (
     Response,
 )
 
-#from werkzeug.routing import BuildError
+# from werkzeug.routing import BuildError
 import os
 import time
 from werkzeug.utils import secure_filename
@@ -57,18 +56,19 @@ from forms import (
     SignupForm
     )
 
+from openplc import openplc_runtime, configure_runtime
+import openplc
+import monitoring as monitor
+
 
 app = create_app()
 # init_app(app) see manage.py
 # app.app_context().push()
+# configure_openplc(app)
 
-from openplc import openplc_runtime, configure_runtime
-import openplc
-import monitoring as monitor
-#configure_openplc(app)
 openplc_runtime = openplc.runtime()
-compilation_status_str=0
-compilation_object=0
+compilation_status_str = 0
+compilation_object = 0
 configure_runtime(app)
 
 monitor.parse_st(openplc_runtime.project_file)
@@ -121,6 +121,7 @@ def start_plc():
     return redirect(url_for('index'))
     # return render_template("dashboard.html", title="OpenPLC_V3.1 Home", user=current_user)
 
+
 @login_required
 @app.route('/stop_plc')
 def stop_plc():
@@ -133,6 +134,7 @@ def stop_plc():
     monitor.stop_monitor()
     #return redirect(url_for('dashboard'))
     return redirect(url_for('index'))
+
 
 @login_required
 @app.route('/runtime_logs')
@@ -345,8 +347,8 @@ def update_settings():
     return redirect(url_for('settings'))  
 
 @login_required
-@app.route('/settings/', methods=['GET', 'POST'])
-@app.route('/settings/<crud_method>/<item_id>', methods=['GET'])
+@app.route('/settings/', methods=['GET', 'POST'] )
+@app.route('/settings/<crud_method>/<item_id>', methods=['GET'] )
 def settings( item_id = None, crud_method = None):
     item_id = item_id or ''
     crud_method = crud_method or ''

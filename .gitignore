@@ -39,3 +39,7 @@ Untitled*
 *.o
 *.Po
 *.Plo
+*/Makefile
+*/Makefile.in
+*.ii
+*.s

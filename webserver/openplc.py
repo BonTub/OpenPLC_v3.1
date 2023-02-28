@@ -1,11 +1,12 @@
-# Use this for OpenPLC console: http://eyalarubas.com/python-subproc-nonblock.html
+# Use this for OpenPLC console:
+# http://eyalarubas.com/python-subproc-nonblock.html
 import subprocess
 import socket
 import errno
 import time
 import os
 # from os import path, remove
-# from threading import Thread
+from threading import Thread
 
 from models import db
 from models import Setting
@@ -51,7 +52,7 @@ class NonBlockingStreamReader:
         '''
         def _populateQueue(stream, queue):
 
-            #while True:
+            # while True:
             while not self.end_of_stream:
                 rline = stream.readline()
                 if rline:
@@ -237,7 +238,7 @@ class runtime:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.connect(('localhost', 43628))
                 s.send(b'runtime_logs()\n')
-                data = s.recv(1000000)
+                data = s.recv(100000)
                 s.close()
                 return data
             except:
@@ -267,7 +268,7 @@ class runtime:
 def configure_runtime(app):
     global openplc_runtime
     with app.app_context():
-        # session = db.session.session_factory()
+        session = db.session.session_factory()
         try:
             # a list
             result = db.session.query(Setting).all()

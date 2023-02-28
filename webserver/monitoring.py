@@ -1,6 +1,9 @@
-import time, threading
+import threading
+import time
 from struct import *
-from pymodbus.client.sync import ModbusTcpClient
+
+from pymodbus.client import ModbusTcpClient
+
 
 class debug_var():
     name = ''
